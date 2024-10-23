@@ -1,6 +1,7 @@
 // グローバル変数の設定
+const STORAGE_KEY = 'fba_inventory_data';
 let currentDate = new Date();
-let orderHistory = JSON.parse(localStorage.getItem('orderHistory')) || [];
+let orderHistory = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 let currentCalculation = null;
 
 // 以下の2つの関数を追加
@@ -192,7 +193,7 @@ function saveOrder() {
     };
 
     orderHistory.push(orderItem);
-    localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(orderHistory));
     
     showNotification('データを保存しました', true);
     document.getElementById('saveButton').disabled = true;
@@ -306,7 +307,7 @@ function filterHistory() {
 function deleteHistoryItem(index) {
     if (confirm('この記録を削除してもよろしいですか？')) {
         orderHistory.splice(index, 1);
-        localStorage.setItem('orderHistory', JSON.stringify(orderHistory));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(orderHistory));
         renderHistory();
         renderCalendar();
         showNotification('記録を削除しました');
