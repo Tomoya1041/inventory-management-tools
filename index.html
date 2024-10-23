@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FBA在庫管理システム</title>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        .input-group input, .input-group textarea {
+            width: calc(100% - 16px);
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .input-group input:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        .status {
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .btn-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background: #45a049;
+        }
+        .btn-calculate {
+            background: #2196F3;
+        }
+        .btn-calculate:hover {
+            background: #1976D2;
+        }
+        .btn-save {
+            background: #4CAF50;
+        }
+        .btn-save:hover {
+            background: #45a049;
+        }
+        .btn-delete {
+            background: #f44336;
+        }
+        .btn-delete:hover {
+            background: #da190b;
+        }
+        .warning {
+            color: #f44336;
+            font-weight: bold;
+            padding: 10px;
+            background: #ffebee;
+            border-radius: 4px;
+        }
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        .calendar-header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+        .calendar-day {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            min-height: 80px;
+            border: 1px solid #ddd;
+            font-size: 13px;
+        }
+        .calendar-day.has-order {
+            background: #e3f2fd;
+        }
+        .calendar-day.today {
+            border: 2px solid #4CAF50;
+        }
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .history-table th, .history-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .history-table th {
+            background: #f5f5f5;
+            font-weight: bold;
+        }
+        .history-table tbody tr:hover {
+            background-color: #f9f9f9;
+        }
+        .tab-container {
+            margin-top: 20px;
+            border-bottom: 2px solid #4CAF50;
+        }
+        .tab-button {
+            padding: 12px 24px;
+            border: none;
+            background: #f0f0f0;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 4px 4px 0 0;
+            margin-right: 4px;
+        }
+        .tab-button.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            background: white;
+            border-radius: 0 0 8px 8px;
+            margin-top: -2px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        .notification.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <h1>FBA在庫管理システム</h1>
+
+    <div class="tab-container">
+        <button class="tab-button active" onclick="showTab('input')">データ入力</button>
+        <button class="tab-button" onclick="showTab('calendar')">カレンダー</button>
+        <button class="tab-button" onclick="showTab('history')">履歴</button>
+    </div>
+
+    <div id="input" class="tab-content active">
+        <div class="dashboard">
+            <div class="card">
+                <h3>商品情報</h3>
+                <div class="input-group">
+                    <label>商品名 <span style="color: red;">*</span></label>
+                    <input type="text" id="productName" placeholder="商品名を入力" required>
+                </div>
+                <div class="input-group">
+                    <label>商品コード（任意）</label>
+                    <input type="text" id="productCode" placeholder="商品コードを入力">
+                </div>
+                <h3>生産・輸送状況</h3>
+                <div class="input-group">
+                    <label>工場生産中の在庫 <span style="color: red;">*</span></label>
+                    <input type="number" id="inProduction" placeholder="個数を入力" min="0" required>
+                </div>
+                <div class="input-group">
+                    <label>倉庫納品待ちの在庫 <span style="color: red;">*</span></label>
+                    <input type="number" id="inTransit" placeholder="個数を入力" min="0" required>
+                </div>
+                <div class="input-group">
+                    <label>FBA倉庫の在庫 <span style="color: red;">*</span></label>
+                    <input type="number" id="inFBA" placeholder="個数を入力" min="0" required>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>販売データ</h3>
+                <div class="input-group">
+                    <label>1ヶ月の平均販売個数 <span style="color: red;">*</span></label>
+                    <input type="number" id="avgSales" placeholder="個数を入力" min="0" required>
+                </div>
+                <div class="input-group">
+                    <label>リードタイム（日） <span style="color: red;">*</span></label>
+                    <input type="number" id="leadTime" value="55" min="0" required>
+                </div>
+                <div class="input-group">
+                    <label>発注予定日 <span style="color: red;">*</span></label>
+                    <input type="date" id="orderDate" required>
+                </div>
+                <div class="input-group">
+                    <label>備考</label>
+                    <textarea id="notes" placeholder="備考があれば入力してください" style="height: 80px;"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>在庫分析</h3>
+            <div class="status" id="analysis"></div>
+        </div>
+
+        <div class="btn-container">
+            <button onclick="calculateOrder()" class="btn btn-calculate">発注数計算</button>
+            <button onclick="saveOrder()" class="btn btn-save" disabled id="saveButton">データを保存</button>
+        </div>
+        
+        <div class="status" id="orderSuggestion"></div>
+    </div>
+
+    <div id="calendar" class="tab-content">
+        <div class="calendar-header">
+            <button onclick="previousMonth()" class="btn">前月</button>
+            <span id="currentMonth" style="margin: 0 20px; font-weight: bold;"></span>
+            <button onclick="nextMonth()" class="btn">次月</button>
+        </div>
+        <div class="calendar" id="calendarGrid"></div>
+    </div>
+
+    <div id="history" class="tab-content">
+        <h3>発注履歴</h3>
+        <div class="input-group">
+            <input type="text" id="searchHistory" placeholder="商品名で検索..." onkeyup="filterHistory()">
+        </div>
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>発注日</th>
+                    <th>商品名</th>
+                    <th>発注数</th>
+                    <th>在庫状況</th>
+                    <th>納品予定日</th>
+                    <th>備考</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="historyTableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <!-- JavaScriptファイルの読み込み -->
+    <script src="script.js"></script>
+</body>
+</html>
