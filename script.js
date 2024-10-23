@@ -1,7 +1,30 @@
 // グローバル変数の設定
-const STORAGE_KEY = 'fba_inventory_data';
+// ストレージ関連の処理をまとめた関数を追加
+const Storage = {
+    save: function(data) {
+        try {
+            localStorage.setItem('fba_inventory_data', JSON.stringify(data));
+            return true;
+        } catch (e) {
+            console.error('保存エラー:', e);
+            return false;
+        }
+    },
+    
+    load: function() {
+        try {
+            const data = localStorage.getItem('fba_inventory_data');
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error('読み込みエラー:', e);
+            return [];
+        }
+    }
+};
+
+// グローバル変数の初期化
 let currentDate = new Date();
-let orderHistory = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+let orderHistory = Storage.load();
 let currentCalculation = null;
 
 // 以下の2つの関数を追加
@@ -193,13 +216,16 @@ function saveOrder() {
     };
 
     orderHistory.push(orderItem);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(orderHistory));
     
-    showNotification('データを保存しました', true);
-    document.getElementById('saveButton').disabled = true;
-    
-    renderHistory();
-    renderCalendar();
+    // 新しいStorage関数を使用
+    if (Storage.save(orderHistory)) {
+        showNotification('データを保存しました', true);
+        document.getElementById('saveButton').disabled = true;
+        renderHistory();
+        renderCalendar();
+    } else {
+        showNotification('データの保存に失敗しました', false);
+    }
 }
 
 // カレンダー表示機能
@@ -307,10 +333,13 @@ function filterHistory() {
 function deleteHistoryItem(index) {
     if (confirm('この記録を削除してもよろしいですか？')) {
         orderHistory.splice(index, 1);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(orderHistory));
-        renderHistory();
-        renderCalendar();
-        showNotification('記録を削除しました');
+        if (Storage.save(orderHistory)) {
+            renderHistory();
+            renderCalendar();
+            showNotification('記録を削除しました');
+        } else {
+            showNotification('削除の保存に失敗しました', false);
+        }
     }
 }
 
@@ -326,13 +355,17 @@ function nextMonth() {
 }
 
 // 初期化処理
-window.onload = function() {
+// ページ読み込み時の処理を追加
+window.addEventListener('load', function() {
+    orderHistory = Storage.load();
+    renderHistory();
+    renderCalendar();
+    
+    // 現在の日付をセット
     const today = new Date();
     document.getElementById('orderDate').value = today.toISOString().split('T')[0];
     document.getElementById('saveButton').disabled = true;
-    renderCalendar();
-    renderHistory();
-};
+});
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('orderDate').addEventListener('change', function() {
         if (currentCalculation) {
